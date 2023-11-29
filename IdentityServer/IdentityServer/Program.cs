@@ -1,6 +1,292 @@
+using System.Reflection;
+using Duende.IdentityServer.EntityFramework.DbContexts;
+using Duende.IdentityServer.EntityFramework.Entities;
+using Duende.IdentityServer.EntityFramework.Interfaces;
+using Duende.IdentityServer.EntityFramework.Options;
+using Duende.IdentityServer.Models;
+using IdentityModel;
+using IdentityServer.Data;
+using IdentityServer.Factories;
+using IdentityServer.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using ApiResource = Duende.IdentityServer.EntityFramework.Entities.ApiResource;
+using ApiScope = Duende.IdentityServer.EntityFramework.Entities.ApiScope;
+using Client = Duende.IdentityServer.EntityFramework.Entities.Client;
+using IdentityResource = Duende.IdentityServer.EntityFramework.Entities.IdentityResource;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services
+    .AddDbContext<ApplicationDbContext>((serviceProvider, dbContextOptionsBuilder) =>
+    {
+        dbContextOptionsBuilder.UseSqlServer(
+            serviceProvider.GetRequiredService<IConfiguration>()
+                .GetConnectionString("Identity"),
+            sqlServerDbContextOptionsBuilder =>
+            {
+                sqlServerDbContextOptionsBuilder
+                    .MigrationsAssembly(
+                        typeof(Program).GetTypeInfo().Assembly.GetName().Name);
+            });
+    });
+
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipleFactory>()
+    .AddDefaultTokenProviders()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
+builder.Services.AddIdentityServer()
+    .AddAspNetIdentity<ApplicationUser>()
+    .AddConfigurationStore(configurationStoreOptions =>
+    {
+        configurationStoreOptions.ResolveDbContextOptions = ResolveDbContextOptions;
+    })
+    .AddOperationalStore(options =>
+    {
+        options.ResolveDbContextOptions = ResolveDbContextOptions;
+    });
+
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+
+    await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>().Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.MigrateAsync();
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    if (await userManager.FindByNameAsync("thomas.clark") is null)
+    {
+        await userManager.CreateAsync(new ApplicationUser
+        {
+            UserName = "thomas.clark",
+            Email = "thomas.clark@gmail.com",
+            GiveName = "Thomas",
+            FamilyName = "Clark"
+        }, "Pass123@#0");
+    }
+
+    var configurationDbContext = scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+
+    if (!await configurationDbContext.ApiResources.AnyAsync())
+    {
+        await configurationDbContext.ApiResources.AddAsync(new ApiResource
+        {
+            Name = Guid.NewGuid().ToString(),
+            DisplayName = "API",
+            Scopes = new List<ApiResourceScope>()
+            {
+                new ApiResourceScope()
+                {
+                    Scope = "https://www.example.com/api"
+                }
+            }
+        });
+
+        await configurationDbContext.SaveChangesAsync();
+    }
+
+    if (!await configurationDbContext.ApiScopes.AnyAsync())
+    {
+        await configurationDbContext.ApiScopes.AddAsync(new ApiScope()
+        {
+            Name = "https://www.example.com/api",
+            DisplayName = "API"
+        });
+
+        await configurationDbContext.SaveChangesAsync();
+    }
+
+    if (!await configurationDbContext.Clients.AnyAsync())
+    {
+        await configurationDbContext.Clients.AddRangeAsync(new List<Client>()
+        {
+            new Client()
+            {
+                ClientId = Guid.NewGuid().ToString(),
+                ClientSecrets = new List<ClientSecret>()
+                {
+                    new ClientSecret()
+                    {
+                        Value = "secret".ToSha512()
+                    }
+                },
+                ClientName = "Console Application",
+                AllowedGrantTypes = new List<ClientGrantType>()
+                {
+                    new ClientGrantType()
+                    {
+                        GrantType = nameof(GrantTypes.ClientCredentials)
+                    }
+                },
+                AllowedScopes = new List<ClientScope>()
+                {
+                    new ClientScope()
+                    {
+                        Scope = "https://www.example.com/api"
+                    }
+                },
+                AllowedCorsOrigins = new List<ClientCorsOrigin>()
+                {
+                    new ClientCorsOrigin()
+                    {
+                        Origin = "https://api.7001"
+                    }
+                }
+            },
+            new Client()
+            {
+                ClientId = Guid.NewGuid().ToString(),
+                ClientSecrets = new List<ClientSecret>()
+                {
+                    new ClientSecret()
+                    {
+                        Value = "secret".ToSha512()
+                    }
+                },
+                ClientName = "Web Application",
+                AllowedGrantTypes = new List<ClientGrantType>()
+                {
+                    new ClientGrantType()
+                    {
+                        GrantType = nameof(GrantTypes.Code)
+                    }
+                },
+                AllowedScopes = new List<ClientScope>()
+                {
+                    new ClientScope()
+                    {
+                        Scope = "https://www.example.com/api"
+                    },
+                    new ClientScope()
+                    {
+                        Scope = "openid"
+                    },
+                    new ClientScope()
+                    {
+                        Scope = "profile"
+                    },
+                    new ClientScope()
+                    {
+                        Scope = "email"
+                    }
+                },
+                RedirectUris = new List<ClientRedirectUri>()
+                {
+                    new ClientRedirectUri()
+                    {
+                        RedirectUri = "https://www.webapplication:7002/signin-oidc"
+                    }
+                },
+                PostLogoutRedirectUris = new List<ClientPostLogoutRedirectUri>()
+                {
+                    new ClientPostLogoutRedirectUri()
+                    {
+                        PostLogoutRedirectUri = "https://webapplication:7002/signout-callback-oidc"
+                    }
+                }
+            },
+            new Client()
+            {
+                ClientId = Guid.NewGuid().ToString(),
+                RequireClientSecret = false,
+                ClientName = "Single Page Application",
+                AllowedGrantTypes = new List<ClientGrantType>()
+                {
+                    new ClientGrantType()
+                    {
+                        GrantType = nameof(GrantTypes.Code)
+                    }
+                },
+                AllowedScopes = new List<ClientScope>()
+                {
+                    new ClientScope()
+                    {
+                        Scope = "https://www.example.com/api"
+                    },
+                    new ClientScope()
+                    {
+                        Scope = "openid"
+                    },
+                    new ClientScope()
+                    {
+                        Scope = "profile"
+                    },
+                    new ClientScope()
+                    {
+                        Scope = "email"
+                    }
+                },
+                AllowedCorsOrigins = new List<ClientCorsOrigin>()
+                {
+                    new ClientCorsOrigin()
+                    {
+                        Origin = "http://singlepageapplication:7003"
+                    }
+                },
+                RedirectUris = new List<ClientRedirectUri>()
+                {
+                    new ClientRedirectUri()
+                    {
+                        RedirectUri = "http://singlepageapplication:7003/authentication/login-callback"
+                    }
+                },
+                PostLogoutRedirectUris = new List<ClientPostLogoutRedirectUri>()
+                {
+                    new ClientPostLogoutRedirectUri()
+                    {
+                        PostLogoutRedirectUri = "http://singlepageapplication:7003/authentication/logout-callback"
+                    }
+                }
+            }
+        });
+
+        await configurationDbContext.SaveChangesAsync();
+    }
+
+    if (!await configurationDbContext.IdentityResources.AnyAsync())
+    {
+        await configurationDbContext.IdentityResources.AddRangeAsync(new List<IdentityResource>()
+        {
+            new IdentityResource()
+            {
+                Name = nameof(IdentityResources.OpenId)
+            },
+            new IdentityResource()
+            {
+                Name = nameof(IdentityResources.Profile)
+            },
+            new IdentityResource()
+            {
+                Name = nameof(IdentityResources.Email)
+            }
+        });
+
+        await configurationDbContext.SaveChangesAsync();
+    }
+}
+
+
 
 app.Run();
+
+void ResolveDbContextOptions(IServiceProvider serviceProvider,
+    DbContextOptionsBuilder dbContextOptionBuilder)
+{
+    dbContextOptionBuilder.UseSqlServer(serviceProvider.GetRequiredService<IConfiguration>()
+            .GetConnectionString("IdentityServer"),
+        sqlServerDbContextOptionsBuilder =>
+        {
+            sqlServerDbContextOptionsBuilder
+                .MigrationsAssembly(
+                    typeof(Program).GetTypeInfo().Assembly.GetName().Name);
+        });
+}
