@@ -1,8 +1,6 @@
 using System.Reflection;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Entities;
-using Duende.IdentityServer.EntityFramework.Interfaces;
-using Duende.IdentityServer.EntityFramework.Options;
 using Duende.IdentityServer.Models;
 using IdentityModel;
 using IdentityServer.Data;
@@ -10,7 +8,7 @@ using IdentityServer.Factories;
 using IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using ApiResource = Duende.IdentityServer.EntityFramework.Entities.ApiResource;
 using ApiScope = Duende.IdentityServer.EntityFramework.Entities.ApiScope;
 using Client = Duende.IdentityServer.EntityFramework.Entities.Client;
@@ -21,15 +19,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddDbContext<ApplicationDbContext>((serviceProvider, dbContextOptionsBuilder) =>
     {
-        dbContextOptionsBuilder.UseSqlServer(
+        dbContextOptionsBuilder.UseNpgsql(
             serviceProvider.GetRequiredService<IConfiguration>()
-                .GetConnectionString("Identity"),
-            sqlServerDbContextOptionsBuilder =>
-            {
-                sqlServerDbContextOptionsBuilder
-                    .MigrationsAssembly(
-                        typeof(Program).GetTypeInfo().Assembly.GetName().Name);
-            });
+                .GetConnectionString("Identity"), NpgsqlOptionsAction);
     });
 
 
@@ -50,7 +42,16 @@ builder.Services.AddIdentityServer()
         options.ResolveDbContextOptions = ResolveDbContextOptions;
     });
 
+builder.Services.AddRazorPages();
+
 var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseIdentityServer();
+app.UseAuthorization();
+app.MapRazorPages();
 
 
 if (app.Environment.IsDevelopment())
@@ -278,15 +279,16 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 
+
+void NpgsqlOptionsAction(NpgsqlDbContextOptionsBuilder optionsBuilder)
+{
+    optionsBuilder.MigrationsAssembly(typeof(Program).GetTypeInfo().Assembly.GetName().Name);
+}
+
 void ResolveDbContextOptions(IServiceProvider serviceProvider,
     DbContextOptionsBuilder dbContextOptionBuilder)
 {
-    dbContextOptionBuilder.UseSqlServer(serviceProvider.GetRequiredService<IConfiguration>()
+    dbContextOptionBuilder.UseNpgsql(serviceProvider.GetRequiredService<IConfiguration>()
             .GetConnectionString("IdentityServer"),
-        sqlServerDbContextOptionsBuilder =>
-        {
-            sqlServerDbContextOptionsBuilder
-                .MigrationsAssembly(
-                    typeof(Program).GetTypeInfo().Assembly.GetName().Name);
-        });
+            NpgsqlOptionsAction);
 }

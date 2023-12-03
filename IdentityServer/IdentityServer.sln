@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityServer", "IdentityServer\IdentityServer.csproj", "{839FAC62-9175-4C8F-AE30-5C362A3E362F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityServer", "IdentityServer\IdentityServer.csproj", "{839FAC62-9175-4C8F-AE30-5C362A3E362F}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{1B27468A-A1AA-4081-B2E7-7A60E8580B46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{C42C2A43-7160-49AF-B448-5AA116816526}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{839FAC62-9175-4C8F-AE30-5C362A3E362F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{839FAC62-9175-4C8F-AE30-5C362A3E362F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{839FAC62-9175-4C8F-AE30-5C362A3E362F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B27468A-A1AA-4081-B2E7-7A60E8580B46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B27468A-A1AA-4081-B2E7-7A60E8580B46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B27468A-A1AA-4081-B2E7-7A60E8580B46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B27468A-A1AA-4081-B2E7-7A60E8580B46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C42C2A43-7160-49AF-B448-5AA116816526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C42C2A43-7160-49AF-B448-5AA116816526}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C42C2A43-7160-49AF-B448-5AA116816526}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C42C2A43-7160-49AF-B448-5AA116816526}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
