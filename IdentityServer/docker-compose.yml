@@ -1,6 +1,39 @@
 version: '3.4'
 
 services:
+  api:
+    build:
+      context: .
+      dockerfile: ./Api/Dockerfile
+    depends_on:
+      - identityserver
+    entrypoint: /bin/sh -c "update-ca-certificates && dotnet Api.dll"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:7001
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=password
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
+      - AUTHENTICATION_AUTHORITY=https://identityserver:7000
+      - AUTHENTICATION_AUDIENCE=77900020-bd43-435a-81c2-7ddb3b31af76
+    ports:
+      - "7001:7001"
+    volumes:
+      - ../localhost.pfx:/https/localhost.pfx:ro
+      - ../localhost.crt:/usr/local/share/ca-certificates/localhost.crt:ro
+  consoleapplication:
+    build:
+      context: .
+      dockerfile: ./ConsoleApplication/Dockerfile
+    depends_on:
+      - api
+      - identityserver
+    entrypoint: /bin/sh -c "update-ca-certificates && dotnet ConsoleApplication.dll"
+    environment:
+      - AUTHENTICATION_AUTHORITY=https://identityserver:7000
+      - AUTHENTICATION_CLIENTID=c6903a79-10dc-4138-85ee-6a8fef175fee
+      - AUTHENTICATION_CLIENTSECRET=secret
+    volumes:
+      - ../localhost.crt:/usr/local/share/ca-certificates/localhost.crt:ro
   db:
     environment:
       - POSTGRES_PASSWORD=password

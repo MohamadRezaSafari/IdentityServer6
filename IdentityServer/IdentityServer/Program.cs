@@ -81,7 +81,8 @@ if (app.Environment.IsDevelopment())
     {
         await configurationDbContext.ApiResources.AddAsync(new ApiResource
         {
-            Name = Guid.NewGuid().ToString(),
+            Name = "77900020-bd43-435a-81c2-7ddb3b31af76",
+            //Guid.NewGuid().ToString(),
             DisplayName = "API",
             Scopes = new List<ApiResourceScope>()
             {
@@ -112,7 +113,8 @@ if (app.Environment.IsDevelopment())
         {
             new Client()
             {
-                ClientId = Guid.NewGuid().ToString(),
+                ClientId = "c6903a79-10dc-4138-85ee-6a8fef175fee",
+                //Guid.NewGuid().ToString(),
                 ClientSecrets = new List<ClientSecret>()
                 {
                     new ClientSecret()
@@ -145,7 +147,8 @@ if (app.Environment.IsDevelopment())
             },
             new Client()
             {
-                ClientId = Guid.NewGuid().ToString(),
+                ClientId = "f624f078-d325-42ce-844e-48f069da597d",
+                //Guid.NewGuid().ToString(),
                 ClientSecrets = new List<ClientSecret>()
                 {
                     new ClientSecret()
@@ -197,7 +200,8 @@ if (app.Environment.IsDevelopment())
             },
             new Client()
             {
-                ClientId = Guid.NewGuid().ToString(),
+                ClientId = "dd70e6ed-3775-4521-9e22-1a6ccc17303a",
+                //Guid.NewGuid().ToString(),
                 RequireClientSecret = false,
                 ClientName = "Single Page Application",
                 AllowedGrantTypes = new List<ClientGrantType>()
