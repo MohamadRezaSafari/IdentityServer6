@@ -4,7 +4,7 @@ namespace IdentityServer.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        public string? GiveName { get; set; }
+        public string? GivenName { get; set; }
         public string? FamilyName { get; set; }
     }
 }

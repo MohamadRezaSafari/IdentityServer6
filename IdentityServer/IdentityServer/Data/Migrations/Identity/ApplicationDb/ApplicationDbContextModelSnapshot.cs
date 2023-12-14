@@ -44,7 +44,7 @@ namespace IdentityServer.Data.Migrations.Identity.ApplicationDb
                     b.Property<string>("FamilyName")
                         .HasColumnType("text");
 
-                    b.Property<string>("GiveName")
+                    b.Property<string>("GivenName")
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")

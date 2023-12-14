@@ -16,8 +16,8 @@ namespace IdentityServer.Factories
         {
             var claimsIdentity = await base.GenerateClaimsAsync(user);
 
-            if (user.GiveName is not null)
-                claimsIdentity.AddClaim(new Claim(JwtClaimTypes.GivenName, user.GiveName));
+            if (user.GivenName is not null)
+                claimsIdentity.AddClaim(new Claim(JwtClaimTypes.GivenName, user.GivenName));
 
             if (user.FamilyName is not null)
                 claimsIdentity.AddClaim(new Claim(JwtClaimTypes.FamilyName, user.FamilyName));
