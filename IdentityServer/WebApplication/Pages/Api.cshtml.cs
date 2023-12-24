@@ -25,7 +25,8 @@ namespace WebApplication.Pages
             {
                 httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", await HttpContext.GetTokenAsync("access_token"));
-                Data = await httpClient.GetStringAsync("https://api:7001/WeatherForecast");
+                //Data = await httpClient.GetStringAsync("https://api:7001/WeatherForecast");
+                Data = await httpClient.GetStringAsync("http://api:7001/WeatherForecast");
             });
         }
     }

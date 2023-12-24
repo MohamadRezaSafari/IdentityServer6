@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(jwtBearerOptions =>
     {
-        //jwtBearerOptions.RequireHttpsMetadata = false;
+        jwtBearerOptions.RequireHttpsMetadata = false;
         jwtBearerOptions.Authority = builder.Configuration["Authentication:Authority"];
         jwtBearerOptions.Audience = builder.Configuration["Authentication:Audience"];
 
@@ -20,7 +19,10 @@ builder.Services.AddAuthorization(authorizationOptions =>
 {
     authorizationOptions.AddPolicy("ApiScope", authorizationPolicyBuilder =>
     {
-        authorizationPolicyBuilder.RequireAuthenticatedUser().RequireClaim("scope", "https://www.example.com/api");
+        authorizationPolicyBuilder
+            .RequireAuthenticatedUser()
+            .RequireClaim("scope", "http://www.example.com/api");
+        //.RequireClaim("scope", "https://www.example.com/api");
     });
 });
 
@@ -28,17 +30,6 @@ builder.Services.AddControllers();
 
 builder.Services.AddCors(corsOptions =>
 {
-    //corsOptions.AddDefaultPolicy(corsPolicyBuilder =>
-    //{
-    //    corsPolicyBuilder
-    //        .AllowAnyMethod()
-    //        .AllowAnyHeader()
-    //        .SetIsOriginAllowed(origin => true)
-    //        .AllowCredentials()
-    //    ;
-    //});
-
-
     corsOptions.AddDefaultPolicy(corsPolicyBuilder =>
     {
         corsPolicyBuilder
@@ -64,7 +55,8 @@ builder.Services.AddSwaggerGen(swaggerGenOptions =>
                 {
                     TokenUrl =
                         new Uri($"{builder.Configuration["Authentication:Authority"]}/connect/token"),
-                    Scopes = { { "https://www.example.com/api", "API" } }
+                    //Scopes = { { "https://www.example.com/api", "API" } }
+                    Scopes = { { "http://www.example.com/api", "API" } }
                 }
             }
         });
@@ -76,7 +68,8 @@ builder.Services.AddSwaggerGen(swaggerGenOptions =>
             {
                 Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "oauth2" }
             },
-            new List<string> { "https://www.example.com/api" }
+            //new List<string> { "https://www.example.com/api" }
+            new List<string> { "http://www.example.com/api" }
         }
     });
 });
@@ -92,7 +85,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors();
+app.UseCors(options =>
+    options
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+);
 
 app.UseAuthentication();
 

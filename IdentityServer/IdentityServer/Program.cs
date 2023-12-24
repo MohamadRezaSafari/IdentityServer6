@@ -8,6 +8,7 @@ using IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
+using static Duende.IdentityServer.IdentityServerConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddDefaultTokenProviders()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddIdentityServer()
+builder.Services.AddIdentityServer(options =>
+{
+    
+    options.MutualTls.Enabled = true;
+})
     .AddAspNetIdentity<ApplicationUser>()
     .AddConfigurationStore(configurationStoreOptions =>
     {
@@ -80,7 +85,8 @@ if (app.Environment.IsDevelopment())
         {
             Name = "9fc33c2e-dbc1-4d0a-b212-68b9e07b3ba0",
             DisplayName = "API",
-            Scopes = new List<string> { "https://www.example.com/api" }
+            // Scopes = new List<string> { "https://www.example.com/api" }
+            Scopes = new List<string> { "http://www.example.com/api" }
         }.ToEntity());
 
 
@@ -91,7 +97,8 @@ if (app.Environment.IsDevelopment())
     {
         await configurationDbContext.ApiScopes.AddAsync(new ApiScope
         {
-            Name = "https://www.example.com/api",
+            // Name = "https://www.example.com/api",
+            Name = "http://www.example.com/api",
             DisplayName = "API"
         }.ToEntity());
 
@@ -107,8 +114,10 @@ if (app.Environment.IsDevelopment())
                 ClientSecrets = new List<Secret> { new("secret".Sha512()) },
                 ClientName = "Console Application",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                AllowedScopes = new List<string> { "https://www.example.com/api" },
-                AllowedCorsOrigins = new List<string> { "https://api:7001" }
+                // AllowedScopes = new List<string> { "https://www.example.com/api" },
+                AllowedScopes = { "http://www.example.com/api" },
+                // AllowedCorsOrigins = new List<string> { "https://api:7001" }
+                AllowedCorsOrigins = new List<string> { "http://api:7001" }
             }.ToEntity(),
             new Client
             {
@@ -116,9 +125,12 @@ if (app.Environment.IsDevelopment())
                 ClientSecrets = new List<Secret> { new("secret".Sha512()) },
                 ClientName = "Web Application",
                 AllowedGrantTypes = GrantTypes.Code,
-                AllowedScopes = new List<string> { "openid", "profile", "email", "https://www.example.com/api" },
-                RedirectUris = new List<string> { "https://webapplication:7002/signin-oidc" },
-                PostLogoutRedirectUris = new List<string> { "https://webapplication:7002/signout-callback-oidc" }
+                // AllowedScopes = new List<string> { "openid", "profile", "email", "https://www.example.com/api" },
+                AllowedScopes = new List<string> { "openid", "profile", "email", "http://www.example.com/api" },
+                // RedirectUris = new List<string> { "https://webapplication:7002/signin-oidc" },
+                RedirectUris = { "http://webapplication:7002/signin-oidc" },
+                // PostLogoutRedirectUris = new List<string> { "https://webapplication:7002/signout-callback-oidc" }
+                PostLogoutRedirectUris = new List<string> { "http://webapplication:7002/signout-callback-oidc" }
             }.ToEntity(),
             new Client
             {
@@ -126,7 +138,8 @@ if (app.Environment.IsDevelopment())
                 RequireClientSecret = false,
                 ClientName = "Single Page Application",
                 AllowedGrantTypes = GrantTypes.Code,
-                AllowedScopes = new List<string> { "openid", "profile", "email", "https://www.example.com/api" },
+                // AllowedScopes = new List<string> { "openid", "profile", "email", "https://www.example.com/api" },
+                AllowedScopes = new List<string> { "openid", "profile", "email", "http://www.example.com/api" },
                 AllowedCorsOrigins = new List<string> { "http://singlepageapplication:7003" },
                 RedirectUris =
                     new List<string> { "http://singlepageapplication:7003/authentication/login-callback" },
