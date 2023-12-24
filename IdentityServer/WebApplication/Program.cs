@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Owin.Security.Notifications;
+using Microsoft.Owin.Security.OpenIdConnect;
 using System.Net;
+using Microsoft.Extensions.Options;
 
 var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 
@@ -10,32 +14,12 @@ builder.Services.AddRazorPages();
 
 
 
-builder.Services.AddAuthentication(authenticationOptions =>
-{
-    authenticationOptions.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    authenticationOptions.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-})
 
-    //.AddCookie(cfg => cfg.SlidingExpiration = true)
-    //.AddJwtBearer(cfg =>
-    //{
-    //    cfg.Audience = "http://localhost:4200/";
-    //    cfg.Authority = "http://localhost:5000/";
-    //    cfg.RequireHttpsMetadata = false;
-    //    cfg.SaveToken = true;
-    //    cfg.TokenValidationParameters = new TokenValidationParameters
-    //    {
-    //        ValidateIssuerSigningKey = true,
-    //        IssuerSigningKey = GetSignInKey(),
-    //        ValidateIssuer = true,
-    //        ValidIssuer = GetIssuer(),
-    //        ValidateAudience = true,
-    //        ValidAudience = GetAudience(),
-    //        ValidateLifetime = true,
-    //        ClockSkew = TimeSpan.Zero
-    //    };
-    //    cfg.Configuration = new OpenIdConnectConfiguration();
-    //   })
+builder.Services.AddAuthentication(authenticationOptions =>
+    {
+        authenticationOptions.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        authenticationOptions.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
     .AddCookie()
     .AddOpenIdConnect(openIdConnectOptions =>
     {
@@ -46,11 +30,44 @@ builder.Services.AddAuthentication(authenticationOptions =>
         openIdConnectOptions.GetClaimsFromUserInfoEndpoint = true;
         openIdConnectOptions.ResponseType = "code";
         //openIdConnectOptions.Scope.Add("https://www/example.com/api");
-        openIdConnectOptions.Scope.Add("http://www/example.com/api");
+        openIdConnectOptions.Scope.Add("http://www.example.com/api");
         openIdConnectOptions.SaveTokens = true;
-    })
-    ;
+        openIdConnectOptions.CorrelationCookie = new CookieBuilder
+        {
+            // HttpOnly = false,
+            SameSite = SameSiteMode.None
+            // SecurePolicy = CookieSecurePolicy.None
+
+            // SameSite = SameSiteMode.None,
+            // HttpOnly = true,
+            // SecurePolicy = CookieSecurePolicy.Always,
+            // Expiration = DateTime.UtcNow + NonceLifetime
+        };
+        openIdConnectOptions.ProtocolValidator = new OpenIdConnectProtocolValidator()
+        {
+            RequireNonce = false,
+            RequireState = false
+        };
+
+        //openIdConnectOptions.NonceCookie = new CookieBuilder()
+        //{
+        //    HttpOnly = false,
+        //    SameSite = SameSiteMode.None,
+        //    SecurePolicy = CookieSecurePolicy.None,
+        //    Expiration = TimeSpan.FromMinutes(10)
+        //};
+    });
 builder.Services.AddAuthorization();
+
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+    options.CheckConsentNeeded = context => true;
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+});
+
+
 
 builder.Services.AddHttpClient();
 

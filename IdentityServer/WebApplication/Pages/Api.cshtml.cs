@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http.Headers;
 
@@ -17,17 +16,14 @@ namespace WebApplication.Pages
             HttpClientFactory = httpClientFactory;
         }
 
-        public void OnGetAsync()
+        public async Task OnGetAsync()
         {
             using var httpClient = HttpClientFactory.CreateClient();
 
-            Task.Run(async () =>
-            {
-                httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", await HttpContext.GetTokenAsync("access_token"));
-                //Data = await httpClient.GetStringAsync("https://api:7001/WeatherForecast");
-                Data = await httpClient.GetStringAsync("http://api:7001/WeatherForecast");
-            });
+            httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", await HttpContext.GetTokenAsync("access_token"));
+            //Data = await httpClient.GetStringAsync("https://api:7001/WeatherForecast");
+            Data = await httpClient.GetStringAsync("http://api:7001/WeatherForecast");
         }
     }
 }

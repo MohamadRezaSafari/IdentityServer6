@@ -8,14 +8,15 @@ using IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
-using static Duende.IdentityServer.IdentityServerConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, dbContextOptionsBuilder) =>
 {
     dbContextOptionsBuilder.UseNpgsql(
-        serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("Identity"),
+        serviceProvider
+            .GetRequiredService<IConfiguration>()
+            .GetConnectionString("Identity"),
         NpgsqlOptionsAction);
 });
 
@@ -26,8 +27,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 
 builder.Services.AddIdentityServer(options =>
 {
-    
-    options.MutualTls.Enabled = true;
+
+    //options.MutualTls.Enabled = true;
 })
     .AddAspNetIdentity<ApplicationUser>()
     .AddConfigurationStore(configurationStoreOptions =>
@@ -59,9 +60,9 @@ if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
 
-    await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync();
-    await scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>().Database.MigrateAsync();
-    await scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.MigrateAsync();
+    // await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.MigrateAsync();
+    // await scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>().Database.MigrateAsync();
+    // await scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.MigrateAsync();
 
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -126,7 +127,8 @@ if (app.Environment.IsDevelopment())
                 ClientName = "Web Application",
                 AllowedGrantTypes = GrantTypes.Code,
                 // AllowedScopes = new List<string> { "openid", "profile", "email", "https://www.example.com/api" },
-                AllowedScopes = new List<string> { "openid", "profile", "email", "http://www.example.com/api" },
+                AllowedScopes = new List<string> 
+                    { "openid", "profile", "email", "http://www.example.com/api" },
                 // RedirectUris = new List<string> { "https://webapplication:7002/signin-oidc" },
                 RedirectUris = { "http://webapplication:7002/signin-oidc" },
                 // PostLogoutRedirectUris = new List<string> { "https://webapplication:7002/signout-callback-oidc" }
@@ -173,7 +175,9 @@ void NpgsqlOptionsAction(NpgsqlDbContextOptionsBuilder npgsqlDbContextOptionsBui
 void ResolveDbContextOptions(IServiceProvider serviceProvider, DbContextOptionsBuilder dbContextOptionsBuilder)
 {
     dbContextOptionsBuilder.UseNpgsql(
-        serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("IdentityServer"),
+        serviceProvider
+            .GetRequiredService<IConfiguration>()
+            .GetConnectionString("IdentityServer"),
         NpgsqlOptionsAction);
 }
 
