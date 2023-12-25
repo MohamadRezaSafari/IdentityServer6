@@ -64,17 +64,17 @@ services:
     volumes:
       - ./localhost.pfx:/https/localhost.pfx:ro
       - ./localhost.crt:/usr/local/share/ca-certificates/localhost.crt:ro
-#  singlepageapplication:
-#    build:
-#      context: .
-#      dockerfile: ./SinglePageApplication/Dockerfile
-#    depends_on:
-#      - api
-#      - identityserver
-#    ports:
-#      - "7003:7003"
-#    volumes:
-#      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+  singlepageapplication:
+    build:
+      context: .
+      dockerfile: ./SinglePageApplication/Dockerfile
+    depends_on:
+      - api
+      - identityserver
+    ports:
+      - "7003:7003"
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf:ro
   webapplication:
     build:
       context: .
